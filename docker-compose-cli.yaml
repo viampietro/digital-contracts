@@ -1,0 +1,68 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+networks:
+  dcontracts:
+
+services:
+
+  orderer.berger-levrault.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer.berger-levrault.com
+    container_name: orderer.berger-levrault.com
+    networks:
+      - dcontracts 
+  
+  contract-service.berger-levrault.com:
+    container_name: contract-service.berger-levrault.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: contract-service.berger-levrault.com
+    networks:
+      - dcontracts
+
+  contract-service.montpellier.fr:
+    container_name: contract-service.montpellier.fr
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: contract-service.montpellier.fr
+    networks:
+      - dcontracts
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=contract-service.berger-levrault.com:7051
+      - CORE_PEER_LOCALMSPID=BlMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/users/Admin@berger-levrault.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    # command: /bin/bash -c './scripts/script.sh ${CHANNEL_NAME}; sleep $TIMEOUT'
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/go
+        - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+        - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+
+    depends_on:
+      - orderer.berger-levrault.com
+      - contract-service.berger-levrault.com
+      - contract-service.montpellier.fr
+    networks:
+      - dcontracts
+

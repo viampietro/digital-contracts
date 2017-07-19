@@ -1,0 +1,33 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# MSP pour les noeuds "orderers" de Berger-Levrault et de 
+# la mairie de Montpellier
+#
+OrdererOrgs:
+  - Name: OrdererBergerLevrault
+    Domain: berger-levrault.com
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+
+  #####################################################
+  # Pair representant l'entreprise Berger-Levrault    #
+  # pour la creation du MSP                           #
+  #####################################################	
+  - Name: Berger-Levrault 
+    Domain: berger-levrault.com
+    Specs:
+      - Hostname: contract-service
+  
+  #####################################################
+  # Pair representant la mairie de Montpellier        #
+  # pour la creation du MSP                           #
+  #####################################################	
+  - Name: Montpellier 
+    Domain: montpellier.fr
+    Specs:
+      - Hostname: contract-service

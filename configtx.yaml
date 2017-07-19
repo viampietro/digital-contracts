@@ -1,0 +1,75 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+Profiles:
+
+    DigitalContractsOrdererGenesis:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererBergerLevrault
+        Consortiums:
+            DigitalContractsConsortium:
+                Organizations:
+                    - *BergerLevrault
+                    - *Montpellier
+
+    DigitalContractsChannel:
+        Consortium: DigitalContractsConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *BergerLevrault
+                - *Montpellier
+
+Organizations:
+
+    - &OrdererBergerLevrault
+        Name: OrdererBergerLevrault
+        ID: OrdererBergerLevraultMSP
+        MSPDir: crypto-config/ordererOrganizations/berger-levrault.com/msp
+    
+    - &BergerLevrault
+        Name: BlMSP
+        ID: BlMSP
+        MSPDir: crypto-config/peerOrganizations/berger-levrault.com/msp
+
+        AnchorPeers:
+            - Host: contract-service.berger-levrault.com 
+              Port: 7051
+
+    - &Montpellier
+        Name: MtpMSP
+        ID: MtpMSP
+        MSPDir: crypto-config/peerOrganizations/montpellier.fr/msp
+
+        AnchorPeers:
+            - Host: contract-service.montpellier.fr
+              Port: 7051
+
+Orderer: &OrdererDefaults
+
+    OrdererType: solo
+    Addresses:
+        - orderer.berger-levrault.com:7050
+
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+    
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+
+    Organizations:
+        - *OrdererBergerLevrault
+
+Application: &ApplicationDefaults
+
+    # Organizations is the list of orgs which are defined as participants on
+    # the application side of the network
+    Organizations:
