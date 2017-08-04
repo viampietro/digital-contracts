@@ -1,0 +1,189 @@
+#!/bin/bash
+
+ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/berger-levrault.com/orderers/orderer.berger-levrault.com/msp/tlscacerts/tlsca.berger-levrault.com-cert.pem
+
+# Print the usage message
+function printHelp () {
+    echo "Usage: "
+    echo "  chaincode <command> [-d <domain>] [-m <mspid>] [-n <chaincode name>] [-C channel name] [-c <json>]"
+    echo "  chaincode -h|--help (print this message)"
+    echo
+    echo "  <command> : invoke|query"
+    echo
+    echo "  -d <domain> - domain name used to set env CORE/ORDERER variables (defaults to \"berger-levrault.com\")"
+    echo "  -m <mspid> - mspid used to set env CORE/ORDERER variables (defaults to \"BlMSP\")"
+    echo "  -n <chaincode name> - chaincode name used to perform the invoke command (defaults to \"digital-contracts-chaincode\")"	
+    echo "  -C <channel name> - channel name to use (defaults to \"digital-contracts-channel\")"
+    echo "  -c <json> - JSON object to express the function to invoke and the parameters given (defaults to '{\"Args\": [\"initLedger\"]}')"
+    echo
+}
+# verify the result of the end-to-end test
+verifyResult () {
+    if [ $1 -ne 0 ] ; then
+	echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
+	echo "========= ERROR !!! FAILED to execute End-2-End Scenario ==========="
+	echo
+   	exit 1
+    fi
+}
+
+setGlobals () {
+    
+    if [ $# -eq 2 ]; then	
+	
+	DOMAIN=$1
+	MSPID=$2
+
+	CORE_PEER_LOCALMSPID=$MSPID
+	CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/$DOMAIN/peers/contract-service.$DOMAIN/tls/ca.crt
+	CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/$DOMAIN/users/Admin@$DOMAIN/msp
+	CORE_PEER_ADDRESS=contract-service.$DOMAIN:7051
+
+	env | grep CORE
+    else 
+	echo "Bad syntax. Usage : setGlobals <DOMAIN> <MSPID>"
+	echo
+	exit 1
+    fi
+}
+
+chaincodeInvoke () {
+    
+    if [ $# -eq 5 ]; then 
+	
+	DOMAIN=$1
+	MSPID=$2
+	CHAINCODE_NAME=$3
+	CHANNEL_NAME=$4
+	JSON=$5
+
+	setGlobals $DOMAIN $MSPID
+	
+	# while 'peer chaincode' command can get the orderer endpoint from the peer (if join was successful),
+	# lets supply it directly as we know it using the "-o" option
+	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
+	    peer chaincode invoke -o orderer.berger-levrault.com:7050 -n $CHAINCODE_NAME -C $CHANNEL_NAME -c $JSON >&log.txt
+	else
+	    peer chaincode invoke -o orderer.berger-levrault.com:7050 \
+		 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA \
+		 -n $CHAINCODE_NAME -C $CHANNEL_NAME -c $JSON >&log.txt
+	fi
+
+	res=$?
+	cat log.txt
+	
+	verifyResult $res "Invoke execution on PEER contract-service.$DOMAIN failed "
+	echo "===================== Invoke transaction on PEER contract-service.$DOMAIN on channel '$CHANNEL_NAME' is successful ===================== "
+	echo
+    else 
+	echo "Bad syntax. Usage : chaincodeInvoke <DOMAIN> <MSPID> <CHAINCODE_NAME> <CHANNEL_NAME> <JSON>"
+	echo
+    fi
+}
+
+chaincodeQuery () {
+
+    if [ $# -eq 5 ]; then
+
+	DOMAIN=$1
+	MSPID=$2
+	CHAINCODE_NAME=$3
+	CHANNEL_NAME=$4
+	JSON=$5
+	
+	setGlobals $DOMAIN $MSPID
+	
+	echo "===================== Querying on contract-service.$DOMAIN on channel '$CHANNEL_NAME'... ===================== "
+
+	local rc=1
+	local starttime=$(date +%s)
+
+	# continue to poll
+	# we either get a successful response, or reach TIMEOUT
+	while test "$(($(date +%s)-starttime))" -lt "10000" -a $rc -ne 0
+	do
+	    sleep 3
+	    echo "Attempting to Query PEER$PEER ...$(($(date +%s)-starttime)) secs"
+	    peer chaincode query -C $CHANNEL_NAME -n $CHAINCODE_NAME -c $JSON >&log.txt
+	    
+	    test $? -eq 0 && cat log.txt | awk '/Query Result/ {print $NF}' 
+	    let rc=0
+	    
+	done
+	echo
+	
+	cat log.txt
+	if test $rc -eq 0 ; then
+	    echo "===================== Query on contract-service.$DOMAIN on channel '$CHANNEL_NAME' is successful ===================== "
+	else
+	    echo "!!!!!!!!!!!!!!! Query result on contract-service.$DOMAIN is INVALID !!!!!!!!!!!!!!!!"
+            echo "================== ERROR !!! FAILED to execute End-2-End Scenario =================="
+	    echo
+	    exit 1
+	fi
+	
+    else
+	echo "Bad syntax. Usage: chaincodeQuery <DOMAIN> <MSPID> <CHAINCODE_NAME> <CHANNEL_NAME> <JSON>"
+    fi
+}
+
+# Parse help argument 
+while getopts ":h?" opt; do
+    case "$opt" in
+	h|\?)
+	    printHelp
+	    exit 0
+	    ;;
+    esac
+done
+
+SUBCOMMAND=$1; shift
+
+# Parse commandline options 
+while getopts ":?d:m:C:n:c:" opt; do
+    case "$opt" in
+	d)
+	    DOMAIN=$OPTARG
+	    ;;
+	m)
+	    MSPID=$OPTARG
+	    ;;
+	n)
+	    CHAINCODE_NAME=$OPTARG
+	    ;;
+	C)
+	    CHANNEL_NAME=$OPTARG 
+	    ;;
+	c)
+	    JSON=$OPTARG
+	    ;;
+	\?)
+	    printHelp
+	    exit 1
+	    ;;
+	:)
+	    echo "Invalid option : $OPTARG requires an argument"
+	    exit 1	
+	    ;;
+    esac
+done
+
+# default values if not set
+: ${DOMAIN:="montpellier.fr"}
+: ${MSPID:="MtpMSP"}
+: ${CHAINCODE_NAME="digital-contracts-chaincode"}
+: ${CHANNEL_NAME:="digital-contracts-channel"}
+: ${JSON:='{"Args":["initLedger"]}'}
+
+# call right function depending on subcommand
+if [ "$SUBCOMMAND" == "invoke" ]; then
+    chaincodeInvoke $DOMAIN $MSPID $CHAINCODE_NAME $CHANNEL_NAME $JSON
+elif [ "$SUBCOMMAND" == "query" ]; then
+    chaincodeQuery $DOMAIN $MSPID $CHAINCODE_NAME $CHANNEL_NAME $JSON
+else
+    echo "Error : Unknown command $SUBCOMMAND"
+    echo
+    printHelp
+    exit 1
+fi
+
