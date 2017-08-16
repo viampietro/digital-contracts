@@ -1,13 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/peer"
 	"time"
 )
-
+x
 /* 
  * Implements the Chaincode interface
  */
@@ -74,18 +75,39 @@ func (dc *DigitalContractChaincode) initLedger(stub shim.ChaincodeStubInterface)
 
 	/* Creating Contract object */
 	contract := Contract{
-		Client: &client,
-		Contractor: &contractor,
+		Signatures: []ContractSignature{},
 		ContractHeading: "Maintenance gestion des ressources humaines et gestion financière",
 		StartingDate: time.Now(),
-		EndingDate: *new(time.Time),
-		StateRecords: []ContractState{
-			ContractState{
-				Heading: WAITING_FOR_SIGNATURE,
-				StartingDate: time.Now(),
-				EndingDate: *new(time.Time)}},
+		EndingDate: time.Time{},
+		StateRecords: []ContractState{},
 		PaymentRecords: []Payment{}}
+	
+	// Declaring firstState outside contract initialization
+	// for cross-referencing
+	genesisState := ContractState{
+		Heading: WAITING_FOR_SIGNATURE,
+		StartingDate: time.Now(),
+		EndingDate: time.Time{}}
 
+	contract.StateRecords = append(contract.StateRecords, genesisState)
+
+	// Signatures issued by client and contractor
+	clientSignature := ContractSignature{
+		SignatoryRef: &client,
+		StatusOfSignatory: CLIENT,
+		DateOfSignature: time.Now(),
+		SignatureDigest: fmt.Sprintf("%x", sha256.Sum256([]byte(client.RegistrationNumber)))}
+
+	contractorSignature := ContractSignature{
+		SignatoryRef: &contractor,
+		StatusOfSignatory: CONTRACTOR,
+		DateOfSignature: time.Now(),
+		SignatureDigest: fmt.Sprintf("%x", sha256.Sum256([]byte(contractor.RegistrationNumber)))}
+
+	// Add signatures to the Signatures slice in the contract object
+	contract.Signatures = append(contract.Signatures, clientSignature)
+	contract.Signatures = append(contract.Signatures, contractorSignature)
+	
 	// Storing Contract object in the ledger with key 0
 	marshaledContract, err := json.Marshal(contract)
 	if err != nil {

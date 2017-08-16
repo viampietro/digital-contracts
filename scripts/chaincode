@@ -17,6 +17,7 @@ function printHelp () {
     echo "  -c <json> - JSON object to express the function to invoke and the parameters given (defaults to '{\"Args\": [\"initLedger\"]}')"
     echo
 }
+
 # verify the result of the end-to-end test
 verifyResult () {
     if [ $1 -ne 0 ] ; then
@@ -39,7 +40,6 @@ setGlobals () {
 	CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/$DOMAIN/users/Admin@$DOMAIN/msp
 	CORE_PEER_ADDRESS=contract-service.$DOMAIN:7051
 
-	env | grep CORE
     else 
 	echo "Bad syntax. Usage : setGlobals <DOMAIN> <MSPID>"
 	echo
@@ -177,8 +177,12 @@ done
 
 # call right function depending on subcommand
 if [ "$SUBCOMMAND" == "invoke" ]; then
+    echo "Invoke $JSON in chaincode \"$CHAINCODE_NAME\" and channel \"$CHANNEL_NAME\"..."
+    echo
     chaincodeInvoke $DOMAIN $MSPID $CHAINCODE_NAME $CHANNEL_NAME $JSON
 elif [ "$SUBCOMMAND" == "query" ]; then
+    echo "Query $JSON in chaincode \"$CHAINCODE_NAME\" and channel \"$CHANNEL_NAME\"..."
+    echo
     chaincodeQuery $DOMAIN $MSPID $CHAINCODE_NAME $CHANNEL_NAME $JSON
 else
     echo "Error : Unknown command $SUBCOMMAND"

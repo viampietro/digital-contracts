@@ -45,13 +45,13 @@ services:
       - CORE_PEER_ID=cli
       - CORE_PEER_ADDRESS=contract-service.berger-levrault.com:7051
       - CORE_PEER_LOCALMSPID=BlMSP
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/peers/contract-service.berger-levrault.com/tls/ca.crt
       - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/berger-levrault.com/users/Admin@berger-levrault.com/msp
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    # command: /bin/bash -c './scripts/script.sh ${CHANNEL_NAME}; sleep $TIMEOUT'
+    command: /bin/bash -c './scripts/script.sh'
     volumes:
         - /var/run/:/host/var/run/
         # uncomment the line below to use the chaincode files in the chaincode directory
