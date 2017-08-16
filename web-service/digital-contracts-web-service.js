@@ -12,7 +12,7 @@ var util = require('util');
  *******************************************/
 var options = {
 
-  wallet_path: path.join(__dirname, '..m/creds'),
+  wallet_path: path.join(__dirname, '../creds'),
   private_key_path: path.join(__dirname, '../crypto-config/peerOrganizations/montpellier.fr/users/Admin@montpellier.fr/msp/keystore/d1178b60238cbbff5701d85dafdf1ae85f0ad7c5141a2a37898def87f7fd4beb_sk'),
   ecert_path: path.join(__dirname, '../crypto-config/peerOrganizations/montpellier.fr/users/Admin@montpellier.fr/msp/signcerts/Admin@montpellier.fr-cert.pem'),
   user_id: 'Vincent',
