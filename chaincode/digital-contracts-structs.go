@@ -2,7 +2,6 @@ package main
 
 import (
 	"strconv"
-	"time"
 )
 
 /*=======================================================
@@ -24,7 +23,7 @@ const (
  */
 func (csh ContractStateHeading) String() string {
 	
-	name := []string{"waiting for signature", "signed", "waiting for payment", "in order"}
+	name := []string{"en attente de signature", "signé", "en attente de paiement", "en règle"}
 	i := int(csh)
 
 	switch {
@@ -35,11 +34,11 @@ func (csh ContractStateHeading) String() string {
 	}
 }
 
-/*==============================================
- =============== SIGNATORYSTATUS ===============
- ===============================================
+/*===============================================
+ =============== SIGNATORY STATUS ===============
+ ================================================
      Defining the signatory's status as enum
- ===============================================*/
+ ================================================*/
 type SignatoryStatus int
 
 const (
@@ -52,7 +51,7 @@ const (
  */
 func (sigstat SignatoryStatus) String() string {
 	
-	name := []string{"client", "contractor"}
+	name := []string{"client", "prestataire"}
 	i := int(sigstat)
 
 	switch {
@@ -63,16 +62,16 @@ func (sigstat SignatoryStatus) String() string {
 	}
 }
 
-/*==============================================
- =============== CONTRACTSTATE =================
- ===============================================
-  Defining struct to express the contract state
- ===============================================*/
+/*===============================================
+ =============== CONTRACT STATE =================
+ ================================================
+  Defining struct for contract's state
+ ================================================*/
 type ContractState struct {
 	
 	Heading      ContractStateHeading // ContractState's description  
-	StartingDate time.Time            // Starting date for ContractState
-	EndingDate   time.Time            // Ending date for ContractState (nil for current state)
+	StartingDate string               // Starting date for ContractState
+	EndingDate   string               // Ending date for ContractState (nil for current state)
 
 }
 
@@ -84,8 +83,8 @@ type ContractState struct {
 type Payment struct {
 
 	Amount         float64    // payment's amount in euros
-	DateOfIssuance time.Time  // payment's date
-	Issuer         *Signatory // ref to signatory issuing the payment
+	DateOfIssuance string     // payment's date
+	Issuer         Signatory  // ref to signatory issuing the payment
 	
 }
 
@@ -96,11 +95,11 @@ type Payment struct {
  ==========================================*/
 type Signatory struct {
 
-	BusinessName       string // Name of legal entity          
-	HeadQuarters       string // Address of the signatory's head quarters 
-	Holder             string // Name of legal holder
-	RegistrationNumber string // SIRET number
-
+	BusinessName       string          // Name of legal entity          
+	HeadQuarters       string          // Address of the signatory's head quarters 
+	Holder             string          // Name of legal holder
+	RegistrationNumber string          // SIRET number
+	Status             SignatoryStatus // Signatory status relative to the contract
 }
 
 /*=================================================
@@ -110,10 +109,9 @@ type Signatory struct {
  ==================================================*/
 type ContractSignature struct {
 
-	SignatoryRef      *Signatory      // Ref to signatory issuing this signature
-	StatusOfSignatory SignatoryStatus // Signatory status relative to the contract
-	DateOfSignature   time.Time       // Contract's date of signature
-	SignatureDigest   string          // SHA256 digest of signatory's private signature
+	Issuer            Signatory // Signatory issuing this signature
+	DateOfSignature   string    // Contract's date of signature
+	SignatureDigest   string    // SHA256 digest of signatory's private signature
 }
 
 /*=================================================
@@ -124,10 +122,12 @@ type ContractSignature struct {
  ==================================================*/
 type Contract struct {
 	
-	Signatures      []ContractSignature // All contract's signatures
 	ContractHeading string              // Object of the contract
-	StartingDate    time.Time           // Contract's starting date
-	EndingDate      time.Time           // Contract's ending date
+	StartingDate    string              // Contract's starting date
+	EndingDate      string              // Contract's ending date
 	StateRecords    []ContractState     // History of contract's previous state
 	PaymentRecords  []Payment           // Payment issued in regard to the contract's fulfillment
+	Signatories     []Signatory         // Contract's parties
+	Signatures      []ContractSignature // All contract's signatures
+
 }

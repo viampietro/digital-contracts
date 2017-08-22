@@ -8,7 +8,7 @@ import (
 	"github.com/hyperledger/fabric/protos/peer"
 	"time"
 )
-x
+
 /* 
  * Implements the Chaincode interface
  */
@@ -65,20 +65,23 @@ func (dc *DigitalContractChaincode) initLedger(stub shim.ChaincodeStubInterface)
 		BusinessName: "Ville de Montpellier",
 		HeadQuarters: "1, Place Georges Frêche, 34000 Montpellier",
 		Holder: "Philippe Saurel",
-		RegistrationNumber: "213 401 722"}
+		RegistrationNumber: "213 401 722",
+		Status: CLIENT}
 	
 	contractor := Signatory{
 		BusinessName: "Berger-Levrault",
 		HeadQuarters: "892, Rue Yves Kermen, 92100 Boulogne-Billancourt",
 		Holder: "Antoine Rouillard",
-		RegistrationNumber: "755 800 646"}
+		RegistrationNumber: "755 800 646",
+		Status: CONTRACTOR}
 
 	/* Creating Contract object */
 	contract := Contract{
+		Signatories: []Signatory{client, contractor},
 		Signatures: []ContractSignature{},
 		ContractHeading: "Maintenance gestion des ressources humaines et gestion financière",
-		StartingDate: time.Now(),
-		EndingDate: time.Time{},
+		StartingDate: time.Now().Format("2006-01-02"),
+		EndingDate: "",
 		StateRecords: []ContractState{},
 		PaymentRecords: []Payment{}}
 	
@@ -86,28 +89,26 @@ func (dc *DigitalContractChaincode) initLedger(stub shim.ChaincodeStubInterface)
 	// for cross-referencing
 	genesisState := ContractState{
 		Heading: WAITING_FOR_SIGNATURE,
-		StartingDate: time.Now(),
-		EndingDate: time.Time{}}
+		StartingDate: time.Now().Format("2006-01-02"),
+		EndingDate: ""}
 
 	contract.StateRecords = append(contract.StateRecords, genesisState)
-
+	
 	// Signatures issued by client and contractor
 	clientSignature := ContractSignature{
-		SignatoryRef: &client,
-		StatusOfSignatory: CLIENT,
-		DateOfSignature: time.Now(),
+		Issuer: client,
+		DateOfSignature: time.Now().Format("2006-01-02"),
 		SignatureDigest: fmt.Sprintf("%x", sha256.Sum256([]byte(client.RegistrationNumber)))}
 
 	contractorSignature := ContractSignature{
-		SignatoryRef: &contractor,
-		StatusOfSignatory: CONTRACTOR,
-		DateOfSignature: time.Now(),
+		Issuer: contractor,
+		DateOfSignature: time.Now().Format("2006-01-02"),
 		SignatureDigest: fmt.Sprintf("%x", sha256.Sum256([]byte(contractor.RegistrationNumber)))}
 
 	// Add signatures to the Signatures slice in the contract object
 	contract.Signatures = append(contract.Signatures, clientSignature)
 	contract.Signatures = append(contract.Signatures, contractorSignature)
-	
+
 	// Storing Contract object in the ledger with key 0
 	marshaledContract, err := json.Marshal(contract)
 	if err != nil {
@@ -119,6 +120,7 @@ func (dc *DigitalContractChaincode) initLedger(stub shim.ChaincodeStubInterface)
 		return shim.Error("Failed to create genesis asset")
 	}
 
+	// Printing the stuct for debugging
 	fmt.Println(contract)
 	fmt.Println(string(marshaledContract))
 	
@@ -177,6 +179,13 @@ func (dc *DigitalContractChaincode) addContract(stub shim.ChaincodeStubInterface
 			return shim.Error(fmt.Sprintf("Asset %s already exists", newContractKey))
 			
 		} else {
+			// If the json object sent to chaincode isn't well formed
+			// then raise an error
+			contractObject := new(Contract);
+			if err := json.Unmarshal([]byte(newContract), contractObject); err != nil {
+				return shim.Error(fmt.Sprintf("JSON unmarshaling error, %s", err.Error()));
+			}
+
 			// We store the key and the value on the ledger
 			err = stub.PutState(newContractKey, []byte(newContract))
 			
@@ -185,15 +194,15 @@ func (dc *DigitalContractChaincode) addContract(stub shim.ChaincodeStubInterface
 			}
 		}
 
-		return shim.Success([]byte(newContract))
-
+		return shim.Success([]byte{})
+		
 		
 	} else {
 		
 		return shim.Error("Wrong number of arguments. Expecting 2 arguments (key and value)")
-
+		
 	}
-
+	
 }
 
 // main function starts up the chaincode in the container during instantiate

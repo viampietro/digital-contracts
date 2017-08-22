@@ -222,8 +222,8 @@ echo "Install chaincode on contract-service.montpellier.fr..."
 installChaincode montpellier.fr MtpMSP digital-contracts-chaincode
 
 # Instantiate chaincode on contract-service.montpellier.fr 
-echo "Instantiating chaincode on contract-service.montpellier.fr..."
-instantiateChaincode montpellier.fr MtpMSP digital-contracts-chaincode
+echo "Instantiating chaincode on contract-service.berger-levrault.com..."
+instantiateChaincode berger-levrault.com BlMSP digital-contracts-chaincode
 
 echo
 echo "========= All GOOD, digital contracts signature network updated =========== "

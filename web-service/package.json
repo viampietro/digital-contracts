@@ -7,9 +7,11 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
+        "body-parser": "^1.17.2",
         "express": "^4.15.4",
         "fabric-ca-client": ">=1.0.0-rc1 <1.0.0-rc1.10",
-        "fabric-client": ">=1.0.0-rc1 <1.0.0-rc1.10"
+        "fabric-client": ">=1.0.0-rc1 <1.0.0-rc1.10",
+        "package.json": "^2.0.1"
     },
     "author": "Vincent Iampietro",
     "keywords": [
