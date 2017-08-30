@@ -208,7 +208,7 @@ CLI_TIMEOUT=10000
 CHANNEL_NAME="digital-contracts-channel"
 
 # use this as the default docker-compose yaml definition
-COMPOSE_FILE=docker-compose-cli.yaml
+COMPOSE_FILE=docker-compose.yaml
 
 # Parse help argument 
 while getopts ":h?" opt; do

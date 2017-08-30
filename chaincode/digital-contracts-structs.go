@@ -13,7 +13,7 @@ type ContractStateHeading int
 
 const (
 	WAITING_FOR_SIGNATURE = ContractStateHeading(iota)
-	SIGNED
+	WAITING_FOR_VALIDATION
 	WAITING_FOR_PAYMENT
 	IN_ORDER
 )
@@ -23,7 +23,7 @@ const (
  */
 func (csh ContractStateHeading) String() string {
 	
-	name := []string{"en attente de signature", "signé", "en attente de paiement", "en règle"}
+	name := []string{"en attente de signature", "en attente de validation", "en attente de paiement", "en règle"}
 	i := int(csh)
 
 	switch {
