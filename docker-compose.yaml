@@ -55,9 +55,9 @@ services:
     volumes:
         - /var/run/:/host/var/run/
         # uncomment the line below to use the chaincode files in the chaincode directory
-        # - ./chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/go
+        - ./chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/go
         # comment the line below if uncomment the one above
-        - /home/vincent/go/src/digital-contracts-cc:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/go
+        # - /home/vincent/go/src/digital-contracts-cc:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/go
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
         - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
